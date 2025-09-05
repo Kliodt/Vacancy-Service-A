@@ -1,0 +1,6 @@
+
+
+spring:
+  application:
+    name: vacancyManager
+    version: 1.0.0
