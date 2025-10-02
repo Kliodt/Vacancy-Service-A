@@ -43,6 +43,20 @@ public class User {
     @ManyToMany(fetch = FetchType.LAZY)
     private @NotNull List<Vacancy> favoriteList = new ArrayList<>(); // избранное
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    private @NotNull List<Vacancy> responseList = new ArrayList<>(); // отклики
+    @OneToMany(mappedBy = "user", orphanRemoval = true, fetch = FetchType.LAZY)
+    private @NotNull List<UserVacancyResponse> responses = new ArrayList<>(); // отклики с деталями
+    
+    
+    public List<Vacancy> getResponseList() {
+        return responses.stream().map(UserVacancyResponse::getVacancy).toList();
+    }
+    
+    public void addResponse(Vacancy vacancy) {
+        UserVacancyResponse response = new UserVacancyResponse(this, vacancy);
+        responses.add(response);
+    }
+    
+    public void removeResponse(Vacancy vacancy) {
+        responses.removeIf(response -> response.getVacancy().getId() == vacancy.getId());
+    }
 }

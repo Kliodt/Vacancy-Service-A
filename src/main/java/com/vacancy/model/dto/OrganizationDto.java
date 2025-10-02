@@ -2,7 +2,7 @@ package com.vacancy.model.dto;
 
 
 import com.vacancy.model.entities.Organization;
-import com.vacancy.model.entities.User;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

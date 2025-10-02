@@ -2,6 +2,7 @@ package com.vacancy.service;
 
 import com.vacancy.exceptions.RequestException;
 import com.vacancy.model.dto.UserDto;
+import com.vacancy.model.dto.UserVacancyResponseDto;
 import com.vacancy.model.entities.User;
 import com.vacancy.model.entities.Vacancy;
 import com.vacancy.repository.UserRepository;
@@ -20,6 +21,7 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserVacancyResponseService responseService;
 
     public Page<User> getAllUsers(int page, int size) {
         if (size > 50) {
@@ -59,8 +61,8 @@ public class UserService {
         return user.getFavoriteList();
     }
 
-    public List<Vacancy> getUserResponses(Long id) {
-        User user = getUserById(id);
-        return user.getResponseList();
+    public List<UserVacancyResponseDto> getUserResponses(Long id) {
+        getUserById(id);
+        return responseService.getUserResponses(id);
     }
 }

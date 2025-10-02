@@ -1,7 +1,9 @@
 package com.vacancy.controllers;
 
 import com.vacancy.model.entities.Vacancy;
+import com.vacancy.model.dto.UserVacancyResponseDto;
 import com.vacancy.model.dto.VacancyDto;
+import com.vacancy.service.UserVacancyResponseService;
 import com.vacancy.service.VacancyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ import java.util.List;
 public class VacancyController {
 
     private final VacancyService vacancyService;
+    private final UserVacancyResponseService responseService;
 
     @GetMapping
     public ResponseEntity<List<VacancyDto>> getAllVacancies(
@@ -34,6 +37,10 @@ public class VacancyController {
         
         return ResponseEntity.ok().headers(headers).body(dtos);
     }
+
+
+    // ------------------------------ CRUD for vacancies ------------------------------
+
 
     @GetMapping("/{id}")
     public ResponseEntity<VacancyDto> getVacancyById(@PathVariable Long id) {
@@ -59,27 +66,12 @@ public class VacancyController {
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/{vacancyId}/respond/{userId}")
-    public ResponseEntity<Void> respondToVacancy(@PathVariable Long vacancyId, @PathVariable Long userId) {
-        vacancyService.respondToVacancy(vacancyId, userId);
-        return ResponseEntity.ok().build();
-    }
 
-    @DeleteMapping("/{vacancyId}/respond/{userId}")
-    public ResponseEntity<Void> removeResponseFromVacancy(@PathVariable Long vacancyId, @PathVariable Long userId) {
-        vacancyService.removeResponseFromVacancy(vacancyId, userId);
-        return ResponseEntity.ok().build();
-    }
+    // ------------------------------ responses ------------------------------
 
-    @PutMapping("/{vacancyId}/favorite/{userId}")
-    public ResponseEntity<Void> addToFavorites(@PathVariable Long vacancyId, @PathVariable Long userId) {
-        vacancyService.addToFavorites(vacancyId, userId);
-        return ResponseEntity.ok().build();
-    }
-
-    @DeleteMapping("/{vacancyId}/favorite/{userId}")
-    public ResponseEntity<Void> removeFromFavorites(@PathVariable Long vacancyId, @PathVariable Long userId) {
-        vacancyService.removeFromFavorites(vacancyId, userId);
-        return ResponseEntity.ok().build();
+    @GetMapping("/{id}/responses")
+    public ResponseEntity<List<UserVacancyResponseDto>> getVacancyResponses(@PathVariable Long id) {
+        List<UserVacancyResponseDto> responses = responseService.getVacancyResponses(id);
+        return ResponseEntity.ok(responses);
     }
 }

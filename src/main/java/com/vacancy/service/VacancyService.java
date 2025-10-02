@@ -3,14 +3,13 @@ package com.vacancy.service;
 import com.vacancy.exceptions.RequestException;
 import com.vacancy.model.dto.VacancyDto;
 import com.vacancy.model.entities.User;
+import com.vacancy.model.entities.UserVacancyResponse;
 import com.vacancy.model.entities.Vacancy;
-import com.vacancy.repository.UserRepository;
+import com.vacancy.repository.UserVacancyResponseRepository;
 import com.vacancy.repository.VacancyRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.function.Consumer;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class VacancyService {
 
     private final VacancyRepository vacancyRepository;
-    private final UserRepository userRepository;
+    private final UserVacancyResponseRepository responseRepository;
     private final UserService userService;
 
     public Page<Vacancy> getAllVacancies(int page, int size) {
@@ -60,17 +59,17 @@ public class VacancyService {
     @Transactional
     public void respondToVacancy(Long vacancyId, Long userId) {
         User user = userService.getUserById(userId);
-
-        if (getVacancyByIdFromList(user.getResponseList(), vacancyId) == null) {
-            Vacancy vacancy = getVacancyById(vacancyId);
-            user.getResponseList().add(vacancy);
+        Vacancy vacancy = getVacancyById(vacancyId);
+        
+        if (!responseRepository.existsByUserIdAndVacancyId(userId, vacancyId)) {
+            UserVacancyResponse response = new UserVacancyResponse(user, vacancy);
+            responseRepository.save(response);
         }
     }
 
     @Transactional
     public void removeResponseFromVacancy(Long vacancyId, Long userId) {
-        User user = userService.getUserById(userId);
-        user.getResponseList().removeIf(v -> v.getId() == vacancyId);
+        responseRepository.deleteByUserIdAndVacancyId(userId, vacancyId);
     }
 
     @Transactional
