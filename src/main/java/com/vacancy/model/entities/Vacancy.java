@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @RequiredArgsConstructor
 @Entity
-@Table
+@Table(name = "vacancy")
 public class Vacancy {
 
     @Id

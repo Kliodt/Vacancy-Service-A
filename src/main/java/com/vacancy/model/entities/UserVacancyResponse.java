@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @Entity
-@Table
+@Table(name = "user_vacancy_response")
 public class UserVacancyResponse {
 
     @Id
@@ -37,7 +37,7 @@ public class UserVacancyResponse {
     @Column(name = "response_date", nullable = false)
     private @NotNull OffsetDateTime responseDate;
 
-    public UserVacancyResponse(User user, Vacancy vacancy) {
+    public UserVacancyResponse(@NotNull User user, @NotNull Vacancy vacancy) {
         this.user = user;
         this.vacancy = vacancy;
         this.responseDate = OffsetDateTime.now();

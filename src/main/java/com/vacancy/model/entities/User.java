@@ -41,22 +41,15 @@ public class User {
     private @Nullable String cvLink;
 
     @ManyToMany(fetch = FetchType.LAZY)
+    @OrderColumn(name = "list_index")
+    @JoinTable(
+            name = "user_favorites",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "vacancy_id")
+    )
     private @NotNull List<Vacancy> favoriteList = new ArrayList<>(); // избранное
 
     @OneToMany(mappedBy = "user", orphanRemoval = true, fetch = FetchType.LAZY)
     private @NotNull List<UserVacancyResponse> responses = new ArrayList<>(); // отклики с деталями
-    
-    
-    public List<Vacancy> getResponseList() {
-        return responses.stream().map(UserVacancyResponse::getVacancy).toList();
-    }
-    
-    public void addResponse(Vacancy vacancy) {
-        UserVacancyResponse response = new UserVacancyResponse(this, vacancy);
-        responses.add(response);
-    }
-    
-    public void removeResponse(Vacancy vacancy) {
-        responses.removeIf(response -> response.getVacancy().getId() == vacancy.getId());
-    }
+
 }
