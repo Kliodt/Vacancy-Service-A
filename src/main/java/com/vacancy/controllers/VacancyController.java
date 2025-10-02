@@ -2,7 +2,7 @@ package com.vacancy.controllers;
 
 import com.vacancy.model.entities.User;
 import com.vacancy.model.entities.Vacancy;
-import com.vacancy.exceptions.BadRequestException;
+import com.vacancy.exceptions.RequestException;
 import com.vacancy.model.dto.VacancyDto;
 import com.vacancy.repository.UserRepository;
 import com.vacancy.repository.VacancyRepository;
@@ -33,7 +33,7 @@ public class VacancyController {
     public ResponseEntity<VacancyDto> getVacancyById(@PathVariable Long id) {
         Optional<Vacancy> vacancy = vacancyRepository.findById(id);
         if (vacancy.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            throw new RequestException(HttpStatus.NOT_FOUND, "Вакансия не найдена");
         }
         return ResponseEntity.ok(new VacancyDto(vacancy.get()));
     }
@@ -48,7 +48,7 @@ public class VacancyController {
     @PutMapping("/{id}")
     public ResponseEntity<VacancyDto> updateVacancy(@PathVariable Long id, @Valid @RequestBody VacancyDto vacancyDto) {
         if (!vacancyRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
+            throw new RequestException(HttpStatus.NOT_FOUND, "Вакансия не найдена");
         }
         Vacancy vacancy = vacancyDto.toVacancy();
         vacancy.setId(id);
@@ -58,42 +58,40 @@ public class VacancyController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteVacancy(@PathVariable Long id) {
-        if (!vacancyRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
         vacancyRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/{vacancyId}/respond/{userId}")
-    public ResponseEntity<String> respondToVacancy(@PathVariable Long vacancyId, @PathVariable Long userId) {
+    @PutMapping("/{vacancyId}/respond/{userId}")
+    public ResponseEntity<Void> respondToVacancy(@PathVariable Long vacancyId, @PathVariable Long userId) {
         Optional<Vacancy> vacancyOpt = vacancyRepository.findById(vacancyId);
         Optional<User> userOpt = userRepository.findById(userId);
 
-        if (vacancyOpt.isEmpty() || userOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
+        if (vacancyOpt.isEmpty()) {
+            throw new RequestException(HttpStatus.NOT_FOUND, "Вакансия не найдена");
+        }
+        if (userOpt.isEmpty()) {
+            throw new RequestException(HttpStatus.NOT_FOUND, "Пользователь не найден");
         }
 
         User user = userOpt.get();
         Vacancy vacancy = vacancyOpt.get();
 
-        if (user.getResponseList().contains(vacancy)) {
-            throw new BadRequestException("Уже откликался ранее");
+        if (!user.getResponseList().contains(vacancy)) {
+            user.getResponseList().add(vacancy);
+            userRepository.save(user);
         }
 
-        user.getResponseList().add(vacancy);
-        userRepository.save(user);
-
-        return ResponseEntity.ok("Отклик осуществлен");
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{vacancyId}/respond/{userId}")
-    public ResponseEntity<String> removeResponseFromVacancy(@PathVariable Long vacancyId, @PathVariable Long userId) {
+    public ResponseEntity<Void> removeResponseFromVacancy(@PathVariable Long vacancyId, @PathVariable Long userId) {
         Optional<Vacancy> vacancyOpt = vacancyRepository.findById(vacancyId);
         Optional<User> userOpt = userRepository.findById(userId);
 
         if (vacancyOpt.isEmpty() || userOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.ok().build();
         }
 
         User user = userOpt.get();
@@ -102,38 +100,39 @@ public class VacancyController {
         user.getResponseList().remove(vacancy);
         userRepository.save(user);
 
-        return ResponseEntity.ok("Отклик на вакансию удален");
+        return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/{vacancyId}/favorite/{userId}")
-    public ResponseEntity<String> addToFavorites(@PathVariable Long vacancyId, @PathVariable Long userId) {
+    @PutMapping("/{vacancyId}/favorite/{userId}")
+    public ResponseEntity<Void> addToFavorites(@PathVariable Long vacancyId, @PathVariable Long userId) {
         Optional<Vacancy> vacancyOpt = vacancyRepository.findById(vacancyId);
         Optional<User> userOpt = userRepository.findById(userId);
 
-        if (vacancyOpt.isEmpty() || userOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
+        if (vacancyOpt.isEmpty()) {
+            throw new RequestException(HttpStatus.NOT_FOUND, "Вакансия не найдена");
+        }
+        if (userOpt.isEmpty()) {
+            throw new RequestException(HttpStatus.NOT_FOUND, "Пользователь не найден");
         }
 
         User user = userOpt.get();
         Vacancy vacancy = vacancyOpt.get();
 
-        if (user.getFavoriteList().contains(vacancy)) {
-            throw new BadRequestException("Вакансия уже добавлена в избранное");
+        if (!user.getFavoriteList().contains(vacancy)) {
+            user.getFavoriteList().add(vacancy);
+            userRepository.save(user);
         }
 
-        user.getFavoriteList().add(vacancy);
-        userRepository.save(user);
-
-        return ResponseEntity.ok("Вакансия добавлена в избранное");
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{vacancyId}/favorite/{userId}")
-    public ResponseEntity<String> removeFromFavorites(@PathVariable Long vacancyId, @PathVariable Long userId) {
+    public ResponseEntity<Void> removeFromFavorites(@PathVariable Long vacancyId, @PathVariable Long userId) {
         Optional<Vacancy> vacancyOpt = vacancyRepository.findById(vacancyId);
         Optional<User> userOpt = userRepository.findById(userId);
 
         if (vacancyOpt.isEmpty() || userOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.ok().build();
         }
 
         User user = userOpt.get();
@@ -142,6 +141,6 @@ public class VacancyController {
         user.getFavoriteList().remove(vacancy);
         userRepository.save(user);
 
-        return ResponseEntity.ok("Вакансия удалена из избранного");
+        return ResponseEntity.ok().build();
     }
 }

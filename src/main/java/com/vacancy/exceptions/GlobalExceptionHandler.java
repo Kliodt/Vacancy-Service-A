@@ -28,12 +28,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(errors);
     }
 
-    @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<Map<String, String>> handleMethodArgumentNotValid(BadRequestException e) {
-        log.error("Bad request error: {}", e.getMessage());
-        return ResponseEntity.badRequest().body(Map.of(
-            "Error", e.getMessage()
-        ));
+    @ExceptionHandler(RequestException.class)
+    public ResponseEntity<Map<String, String>> handleMethodArgumentNotValid(RequestException e) {
+        return e.responseEntity();
     }
 
     @ExceptionHandler(RuntimeException.class)

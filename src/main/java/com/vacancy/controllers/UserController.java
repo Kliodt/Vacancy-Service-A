@@ -2,7 +2,7 @@ package com.vacancy.controllers;
 
 import com.vacancy.model.entities.User;
 import com.vacancy.model.entities.Vacancy;
-import com.vacancy.exceptions.BadRequestException;
+import com.vacancy.exceptions.RequestException;
 import com.vacancy.model.dto.UserDto;
 import com.vacancy.repository.UserRepository;
 import jakarta.validation.Valid;
@@ -31,7 +31,7 @@ public class UserController {
     public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
         Optional<User> user = userRepository.findById(id);
         if (user.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            throw new RequestException(HttpStatus.NOT_FOUND, "Пользователь не найден");
         }   
         return ResponseEntity.ok(new UserDto(user.get()));
     }
@@ -39,7 +39,7 @@ public class UserController {
     @PostMapping
     public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserDto userDto) {
         if (userRepository.findUserByEmail(userDto.getEmail()) != null) {
-            throw new BadRequestException("Пользователь с таким email уже зарегистрирован");
+            throw new RequestException(HttpStatus.CONFLICT, "Пользователь с таким email уже зарегистрирован");
         }
         User user = userDto.toUser();
         User savedUser = userRepository.save(user);
@@ -49,11 +49,11 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @Valid @RequestBody UserDto userDto) {
         if (!userRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
+            throw new RequestException(HttpStatus.NOT_FOUND, "Пользователь не найден");
         }
         User existing = userRepository.findUserByEmail(userDto.getEmail());
         if (existing != null && !id.equals(existing.getId())) {
-            throw new BadRequestException("С таким email уже зарегистрирован другой пользователь");
+            throw new RequestException(HttpStatus.CONFLICT, "С таким email уже зарегистрирован другой пользователь");
         }
         User user = userDto.toUser();
         user.setId(id);
@@ -63,9 +63,6 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        if (!userRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
         userRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
@@ -74,7 +71,7 @@ public class UserController {
     public ResponseEntity<List<Vacancy>> getUserFavorites(@PathVariable Long id) {
         Optional<User> user = userRepository.findById(id);
         if (user.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            throw new RequestException(HttpStatus.NOT_FOUND, "Пользователь не найден");
         }
         return ResponseEntity.ok(user.get().getFavoriteList());
     }
@@ -83,7 +80,7 @@ public class UserController {
     public ResponseEntity<List<Vacancy>> getUserResponses(@PathVariable Long id) {
         Optional<User> user = userRepository.findById(id);
         if (user.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            throw new RequestException(HttpStatus.NOT_FOUND, "Пользователь не найден");
         }
         return ResponseEntity.ok(user.get().getResponseList());
     }
