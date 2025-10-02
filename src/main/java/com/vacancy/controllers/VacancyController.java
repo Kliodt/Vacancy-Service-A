@@ -2,6 +2,7 @@ package com.vacancy.controllers;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,10 @@ public class VacancyController {
 
     private final VacancyService vacancyService;
 
+    @Operation(
+            summary = "Получить все вакансии",
+            description = "Возвращает список вакансий страницами"
+    )
     @GetMapping
     public ResponseEntity<List<VacancyDto>> getAllVacancies(
             @RequestParam(defaultValue = "0") int page,
