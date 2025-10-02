@@ -35,12 +35,16 @@ public class UserDto {
         this.cvLink = user.getCvLink();
     }
 
-    public User toUser() {
-        User user = new User();
+    public User createUser() {
+        User u = new User();
+        updateUser(u);
+        return u;
+    }
+
+    public void updateUser(User user) {
         user.setId(this.id);
         user.setNickname(this.nickname);
         user.setEmail(this.email);
         user.setCvLink(this.cvLink);
-        return user;
     }
 }

@@ -44,8 +44,13 @@ public class VacancyDto {
         this.city = vacancy.getCity();
     }
 
-    public Vacancy toVacancy() {
-        Vacancy vacancy = new Vacancy();
+    public Vacancy createVacancy() {
+        Vacancy v = new Vacancy();
+        updateVacancy(v);
+        return v;
+    }
+
+    public void updateVacancy(Vacancy vacancy) {
         vacancy.setId(this.id);
         vacancy.setDescription(this.description);
         vacancy.setLongDescription(this.longDescription);
@@ -53,7 +58,6 @@ public class VacancyDto {
         vacancy.setMinSalary(this.minSalary);
         vacancy.setMaxSalary(this.maxSalary);
         vacancy.setCity(this.city);
-        return vacancy;
     }
 
     @AssertTrue(message = "Минимальная зарплата не может быть больше максимальной")

@@ -2,86 +2,73 @@ package com.vacancy.controllers;
 
 import com.vacancy.model.entities.User;
 import com.vacancy.model.entities.Vacancy;
-import com.vacancy.exceptions.RequestException;
 import com.vacancy.model.dto.UserDto;
-import com.vacancy.repository.UserRepository;
+import com.vacancy.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     @GetMapping
-    public ResponseEntity<List<UserDto>> getAllUsers() {
-        List<UserDto> dtos = ((List<User>)userRepository.findAll()).stream().map(UserDto::new).toList();
-        return ResponseEntity.ok(dtos);
+    public ResponseEntity<List<UserDto>> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+        
+        Page<User> userPage = userService.getAllUsers(page, size);
+        
+        List<UserDto> dtos = userPage.getContent().stream().map(UserDto::new).toList();
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Total-Count", String.valueOf(userPage.getTotalElements()));
+        
+        return ResponseEntity.ok().headers(headers).body(dtos);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
-        Optional<User> user = userRepository.findById(id);
-        if (user.isEmpty()) {
-            throw new RequestException(HttpStatus.NOT_FOUND, "Пользователь не найден");
-        }   
-        return ResponseEntity.ok(new UserDto(user.get()));
+        User user = userService.getUserById(id);
+        return ResponseEntity.ok(new UserDto(user));
     }
 
     @PostMapping
     public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserDto userDto) {
-        if (userRepository.findUserByEmail(userDto.getEmail()) != null) {
-            throw new RequestException(HttpStatus.CONFLICT, "Пользователь с таким email уже зарегистрирован");
-        }
-        User user = userDto.toUser();
-        User savedUser = userRepository.save(user);
+        User savedUser = userService.createUser(userDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(new UserDto(savedUser));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @Valid @RequestBody UserDto userDto) {
-        if (!userRepository.existsById(id)) {
-            throw new RequestException(HttpStatus.NOT_FOUND, "Пользователь не найден");
-        }
-        User existing = userRepository.findUserByEmail(userDto.getEmail());
-        if (existing != null && !id.equals(existing.getId())) {
-            throw new RequestException(HttpStatus.CONFLICT, "С таким email уже зарегистрирован другой пользователь");
-        }
-        User user = userDto.toUser();
-        user.setId(id);
-        User updatedUser = userRepository.save(user);
+        User updatedUser = userService.updateUser(id, userDto);
         return ResponseEntity.ok(new UserDto(updatedUser));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userRepository.deleteById(id);
+        userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/favorites")
     public ResponseEntity<List<Vacancy>> getUserFavorites(@PathVariable Long id) {
-        Optional<User> user = userRepository.findById(id);
-        if (user.isEmpty()) {
-            throw new RequestException(HttpStatus.NOT_FOUND, "Пользователь не найден");
-        }
-        return ResponseEntity.ok(user.get().getFavoriteList());
+        List<Vacancy> favorites = userService.getUserFavorites(id);
+        return ResponseEntity.ok(favorites);
     }
 
     @GetMapping("/{id}/responses")
     public ResponseEntity<List<Vacancy>> getUserResponses(@PathVariable Long id) {
-        Optional<User> user = userRepository.findById(id);
-        if (user.isEmpty()) {
-            throw new RequestException(HttpStatus.NOT_FOUND, "Пользователь не найден");
-        }
-        return ResponseEntity.ok(user.get().getResponseList());
+        List<Vacancy> responses = userService.getUserResponses(id);
+        return ResponseEntity.ok(responses);
     }
 }

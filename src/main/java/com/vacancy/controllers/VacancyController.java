@@ -1,146 +1,85 @@
 package com.vacancy.controllers;
 
-import com.vacancy.model.entities.User;
 import com.vacancy.model.entities.Vacancy;
-import com.vacancy.exceptions.RequestException;
 import com.vacancy.model.dto.VacancyDto;
-import com.vacancy.repository.UserRepository;
-import com.vacancy.repository.VacancyRepository;
+import com.vacancy.service.VacancyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/vacancies")
 @RequiredArgsConstructor
 public class VacancyController {
 
-    private final VacancyRepository vacancyRepository;
-    private final UserRepository userRepository;
+    private final VacancyService vacancyService;
 
     @GetMapping
-    public ResponseEntity<List<VacancyDto>> getAllVacancies() {
-        List<VacancyDto> dtos = ((List<Vacancy>) vacancyRepository.findAll()).stream().map(VacancyDto::new).toList();
-        return ResponseEntity.ok(dtos);
+    public ResponseEntity<List<VacancyDto>> getAllVacancies(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+        
+        Page<Vacancy> vacancyPage = vacancyService.getAllVacancies(page, size);
+        
+        List<VacancyDto> dtos = vacancyPage.getContent().stream().map(VacancyDto::new).toList();
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Total-Count", String.valueOf(vacancyPage.getTotalElements()));
+        
+        return ResponseEntity.ok().headers(headers).body(dtos);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<VacancyDto> getVacancyById(@PathVariable Long id) {
-        Optional<Vacancy> vacancy = vacancyRepository.findById(id);
-        if (vacancy.isEmpty()) {
-            throw new RequestException(HttpStatus.NOT_FOUND, "Вакансия не найдена");
-        }
-        return ResponseEntity.ok(new VacancyDto(vacancy.get()));
+        Vacancy vacancy = vacancyService.getVacancyById(id);
+        return ResponseEntity.ok(new VacancyDto(vacancy));
     }
 
     @PostMapping
     public ResponseEntity<VacancyDto> createVacancy(@Valid @RequestBody VacancyDto vacancyDto) {
-        Vacancy vacancy = vacancyDto.toVacancy();
-        Vacancy savedVacancy = vacancyRepository.save(vacancy);
+        Vacancy savedVacancy = vacancyService.createVacancy(vacancyDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(new VacancyDto(savedVacancy));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<VacancyDto> updateVacancy(@PathVariable Long id, @Valid @RequestBody VacancyDto vacancyDto) {
-        if (!vacancyRepository.existsById(id)) {
-            throw new RequestException(HttpStatus.NOT_FOUND, "Вакансия не найдена");
-        }
-        Vacancy vacancy = vacancyDto.toVacancy();
-        vacancy.setId(id);
-        Vacancy updatedVacancy = vacancyRepository.save(vacancy);
+        Vacancy updatedVacancy = vacancyService.updateVacancy(id, vacancyDto);
         return ResponseEntity.ok(new VacancyDto(updatedVacancy));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteVacancy(@PathVariable Long id) {
-        vacancyRepository.deleteById(id);
+        vacancyService.deleteVacancy(id);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{vacancyId}/respond/{userId}")
     public ResponseEntity<Void> respondToVacancy(@PathVariable Long vacancyId, @PathVariable Long userId) {
-        Optional<Vacancy> vacancyOpt = vacancyRepository.findById(vacancyId);
-        Optional<User> userOpt = userRepository.findById(userId);
-
-        if (vacancyOpt.isEmpty()) {
-            throw new RequestException(HttpStatus.NOT_FOUND, "Вакансия не найдена");
-        }
-        if (userOpt.isEmpty()) {
-            throw new RequestException(HttpStatus.NOT_FOUND, "Пользователь не найден");
-        }
-
-        User user = userOpt.get();
-        Vacancy vacancy = vacancyOpt.get();
-
-        if (!user.getResponseList().contains(vacancy)) {
-            user.getResponseList().add(vacancy);
-            userRepository.save(user);
-        }
-
+        vacancyService.respondToVacancy(vacancyId, userId);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{vacancyId}/respond/{userId}")
     public ResponseEntity<Void> removeResponseFromVacancy(@PathVariable Long vacancyId, @PathVariable Long userId) {
-        Optional<Vacancy> vacancyOpt = vacancyRepository.findById(vacancyId);
-        Optional<User> userOpt = userRepository.findById(userId);
-
-        if (vacancyOpt.isEmpty() || userOpt.isEmpty()) {
-            return ResponseEntity.ok().build();
-        }
-
-        User user = userOpt.get();
-        Vacancy vacancy = vacancyOpt.get();
-
-        user.getResponseList().remove(vacancy);
-        userRepository.save(user);
-
+        vacancyService.removeResponseFromVacancy(vacancyId, userId);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{vacancyId}/favorite/{userId}")
     public ResponseEntity<Void> addToFavorites(@PathVariable Long vacancyId, @PathVariable Long userId) {
-        Optional<Vacancy> vacancyOpt = vacancyRepository.findById(vacancyId);
-        Optional<User> userOpt = userRepository.findById(userId);
-
-        if (vacancyOpt.isEmpty()) {
-            throw new RequestException(HttpStatus.NOT_FOUND, "Вакансия не найдена");
-        }
-        if (userOpt.isEmpty()) {
-            throw new RequestException(HttpStatus.NOT_FOUND, "Пользователь не найден");
-        }
-
-        User user = userOpt.get();
-        Vacancy vacancy = vacancyOpt.get();
-
-        if (!user.getFavoriteList().contains(vacancy)) {
-            user.getFavoriteList().add(vacancy);
-            userRepository.save(user);
-        }
-
+        vacancyService.addToFavorites(vacancyId, userId);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{vacancyId}/favorite/{userId}")
     public ResponseEntity<Void> removeFromFavorites(@PathVariable Long vacancyId, @PathVariable Long userId) {
-        Optional<Vacancy> vacancyOpt = vacancyRepository.findById(vacancyId);
-        Optional<User> userOpt = userRepository.findById(userId);
-
-        if (vacancyOpt.isEmpty() || userOpt.isEmpty()) {
-            return ResponseEntity.ok().build();
-        }
-
-        User user = userOpt.get();
-        Vacancy vacancy = vacancyOpt.get();
-
-        user.getFavoriteList().remove(vacancy);
-        userRepository.save(user);
-
+        vacancyService.removeFromFavorites(vacancyId, userId);
         return ResponseEntity.ok().build();
     }
 }
