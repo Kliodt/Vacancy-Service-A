@@ -40,4 +40,8 @@ public class Vacancy {
     @Size(max = 100, message = "Название города не может превышать 100 символов")
     private @Nullable String city;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id")
+    private @Nullable Organization organization; // Организация, опубликовавшая вакансию
+
 }

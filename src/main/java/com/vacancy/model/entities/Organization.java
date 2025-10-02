@@ -37,7 +37,7 @@ public class Organization {
     @Size(max = 100, message = "Email не может превышать 100 символов")
     private @NotNull String email;
 
-    @OneToMany(fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private @NotNull List<Vacancy> publishedVacancies = new ArrayList<>(); // созданные вакансии
 
 }

@@ -11,13 +11,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserVacancyResponseDto {
     
-    private Long id;
     private Long userId;
     private Long vacancyId;
     private OffsetDateTime responseDate;
 
     public UserVacancyResponseDto(UserVacancyResponse userVacancyResponse) {
-        this.id = userVacancyResponse.getId();
         this.userId = userVacancyResponse.getUser().getId();
         this.vacancyId = userVacancyResponse.getVacancy().getId();
         this.responseDate = userVacancyResponse.getResponseDate();

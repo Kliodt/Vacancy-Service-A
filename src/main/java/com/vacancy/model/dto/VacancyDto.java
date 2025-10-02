@@ -29,7 +29,7 @@ public class VacancyDto {
     @Size(max = 100, message = "Название города не может превышать 100 символов")
     private String city;
 
-    private UserDto owner;
+    private Long organizationId;
 
     public VacancyDto(Vacancy vacancy) {
         this.id = vacancy.getId();
@@ -38,6 +38,10 @@ public class VacancyDto {
         this.minSalary = vacancy.getMinSalary();
         this.maxSalary = vacancy.getMaxSalary();
         this.city = vacancy.getCity();
+        
+        if (vacancy.getOrganization() != null) {
+            this.organizationId = vacancy.getOrganization().getId();
+        }
     }
 
     public Vacancy createVacancy() {
