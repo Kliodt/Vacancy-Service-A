@@ -3,14 +3,17 @@ package com.vacancy.model.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
+import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 
 @Data
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@RequiredArgsConstructor
 @Entity
 @Table
 public class Vacancy {
@@ -27,9 +30,6 @@ public class Vacancy {
     @Column(nullable = false, columnDefinition = "text")
     @NotBlank(message = "Подробное описание вакансии не может быть пустым")
     private @NotNull String longDescription;
-
-    @Size(max = 100, message = "Название отдела не может превышать 100 символов")
-    private @Nullable String department;
 
     @Min(value = 0, message = "Минимальная зарплата не может быть отрицательной")
     private @Nullable Integer minSalary;

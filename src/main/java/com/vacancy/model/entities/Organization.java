@@ -2,13 +2,14 @@ package com.vacancy.model.entities;
 
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,8 +19,8 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @RequiredArgsConstructor
 @Entity
-@Table(name = "app_users")
-public class User {
+@Table
+public class Organization {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,13 +37,7 @@ public class User {
     @Size(max = 100, message = "Email не может превышать 100 символов")
     private @NotNull String email;
 
-    @Column(nullable = false, length = 512)
-    @Size(max = 512, message = "CV Link не может превышать 512 символов")
-    private @Nullable String cvLink;
+    @OneToMany(fetch = FetchType.LAZY, orphanRemoval = true)
+    private @NotNull List<Vacancy> publishedVacancies = new ArrayList<>(); // созданные вакансии
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    private @NotNull List<Vacancy> favoriteList = new ArrayList<>(); // избранное
-
-    @ManyToMany(fetch = FetchType.LAZY)
-    private @NotNull List<Vacancy> responseList = new ArrayList<>(); // отклики
 }

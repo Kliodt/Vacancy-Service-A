@@ -1,13 +1,11 @@
 package com.vacancy.model.dto;
 
 import com.vacancy.model.entities.Vacancy;
+import jakarta.validation.constraints.*;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import jakarta.validation.constraints.AssertTrue;
-import jakarta.validation.constraints.Min;
+
 
 @Data
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -22,9 +20,6 @@ public class VacancyDto {
     @NotBlank(message = "Подробное описание вакансии не может быть пустым")
     private String longDescription;
 
-    @Size(max = 100, message = "Название отдела не может превышать 100 символов")
-    private String department;
-
     @Min(value = 0, message = "Минимальная зарплата не может быть отрицательной")
     private Integer minSalary;
 
@@ -34,18 +29,19 @@ public class VacancyDto {
     @Size(max = 100, message = "Название города не может превышать 100 символов")
     private String city;
 
+    private UserDto owner;
+
     public VacancyDto(Vacancy vacancy) {
         this.id = vacancy.getId();
         this.description = vacancy.getDescription();
         this.longDescription = vacancy.getLongDescription();
-        this.department = vacancy.getDepartment();
         this.minSalary = vacancy.getMinSalary();
         this.maxSalary = vacancy.getMaxSalary();
         this.city = vacancy.getCity();
     }
 
     public Vacancy createVacancy() {
-        Vacancy v = new Vacancy();
+        Vacancy v = new Vacancy(description, longDescription);
         updateVacancy(v);
         return v;
     }
@@ -54,7 +50,6 @@ public class VacancyDto {
         vacancy.setId(this.id);
         vacancy.setDescription(this.description);
         vacancy.setLongDescription(this.longDescription);
-        vacancy.setDepartment(this.department);
         vacancy.setMinSalary(this.minSalary);
         vacancy.setMaxSalary(this.maxSalary);
         vacancy.setCity(this.city);
