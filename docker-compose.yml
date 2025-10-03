@@ -1,0 +1,43 @@
+services:
+
+  db:
+    image: postgres:17
+    restart: always
+
+    container_name: vacancy_app_database_container
+
+    shm_size: 128mb
+
+    ports:
+      - "5432:5432"
+
+    env_file:
+      - .env
+
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: vacancies_001
+      PGDATA: /var/lib/postgresql/data
+
+    volumes:
+      - vacancy_app_database:/var/lib/postgresql/data
+
+
+  app:
+    image: vacancy_app:latest
+    container_name: vacancy_app_container
+    ports:
+      - "8080:8080"
+
+    restart: no # todo: change it
+
+    env_file:
+      - .env
+
+    depends_on:
+      - db
+
+
+volumes:
+  vacancy_app_database:
