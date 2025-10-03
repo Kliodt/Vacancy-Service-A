@@ -7,6 +7,8 @@ import com.vacancy.model.entities.User;
 import com.vacancy.model.entities.Vacancy;
 import com.vacancy.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+
+import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -48,6 +50,7 @@ public class UserServiceImpl implements UserService {
     public User updateUser(Long id, UserDto userDto) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RequestException(HttpStatus.NOT_FOUND, "Пользователь не найден"));
+        userDto.setId(id);
         userDto.updateUser(user);
         return user;
     }
@@ -56,13 +59,15 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(id);
     }
 
+    @Transactional
     public List<Vacancy> getUserFavorites(Long id) {
         User user = getUserById(id);
-        return user.getFavoriteList();
+        List<Vacancy> ret = user.getFavoriteList();
+        Hibernate.initialize(ret);
+        return ret;
     }
 
     public List<UserVacancyResponseDto> getUserResponses(Long id) {
-        getUserById(id);
         return responseService.getUserResponses(id);
     }
 }

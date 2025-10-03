@@ -10,11 +10,11 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class UserVacancyResponseServiceImpl implements UserVacancyResponseService {
 
     private final UserVacancyResponseRepository responseRepository;
 
+    @Transactional(readOnly = true)
     public List<UserVacancyResponseDto> getUserResponses(Long userId) {
         return responseRepository.findByUserId(userId)
                 .stream()
@@ -22,6 +22,7 @@ public class UserVacancyResponseServiceImpl implements UserVacancyResponseServic
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<UserVacancyResponseDto> getVacancyResponses(Long vacancyId) {
         return responseRepository.findByVacancyId(vacancyId)
                 .stream()
