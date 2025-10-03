@@ -22,9 +22,6 @@ public class UserDto {
     @Size(max = 100, message = "Email не может превышать 100 символов")
     private String email;
 
-    @NotBlank(message = "Password hash не может быть пустым")
-    private String passwordHash;
-
     @Size(max = 512, message = "CV Link не может превышать 512 символов")
     private String cvLink;
 
