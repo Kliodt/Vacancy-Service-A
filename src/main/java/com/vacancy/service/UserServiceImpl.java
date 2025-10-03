@@ -42,6 +42,7 @@ public class UserServiceImpl implements UserService {
         if (userRepository.findUserByEmail(userDto.getEmail()) != null) {
             throw new RequestException(HttpStatus.CONFLICT, "Пользователь с таким email уже зарегистрирован");
         }
+        userDto.setId(null);
         User user = userDto.createUser();
         return userRepository.save(user);
     }

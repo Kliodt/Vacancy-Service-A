@@ -45,6 +45,7 @@ public class OrganizationServiceImpl implements OrganizationService {
         if (organizationRepository.findOrganizationByEmail(organizationDto.getEmail()) != null) {
             throw new RequestException(HttpStatus.CONFLICT, "Организация с таким email уже зарегистрирована");
         }
+        organizationDto.setId(null);
         Organization organization = organizationDto.createOrganization();
         return organizationRepository.save(organization);
     }
@@ -81,6 +82,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     public Vacancy publishVacancy(Long organizationId, VacancyDto vacancyDto) {
         Organization organization = organizationRepository.findById(organizationId)
                 .orElseThrow(() -> new RequestException(HttpStatus.NOT_FOUND, "Организация не найдена"));
+        vacancyDto.setId(null);
         Vacancy vacancy = vacancyDto.createVacancy();
         vacancy.setOrganization(organization);
         return vacancyRepository.save(vacancy);
