@@ -1,5 +1,7 @@
 package com.vacancy.model.dto;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.vacancy.model.entities.User;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -10,6 +12,7 @@ import jakarta.validation.constraints.Email;
 
 @Data
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class UserDto {
     private Long id;
 

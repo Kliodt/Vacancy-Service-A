@@ -1,5 +1,7 @@
 package com.vacancy.model.dto;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.vacancy.model.entities.Vacancy;
 import jakarta.validation.constraints.*;
 import lombok.AccessLevel;
@@ -7,8 +9,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 
+// todo: мапперы для дто
+
 @Data
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class VacancyDto {
 
     private Long id;
