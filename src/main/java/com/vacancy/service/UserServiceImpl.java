@@ -1,9 +1,8 @@
 package com.vacancy.service;
 
 import com.vacancy.exceptions.RequestException;
-import com.vacancy.model.dto.UserDto;
-import com.vacancy.model.dto.UserVacancyResponseDto;
 import com.vacancy.model.entities.User;
+import com.vacancy.model.entities.UserVacancyResponse;
 import com.vacancy.model.entities.Vacancy;
 import com.vacancy.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +21,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
+    private static final String USER_NOT_FOUND = "Пользователь не найден";
+
     private final UserRepository userRepository;
     private final UserVacancyResponseService responseService;
 
@@ -35,25 +36,31 @@ public class UserServiceImpl implements UserService {
 
     public User getUserById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new RequestException(HttpStatus.NOT_FOUND, "Пользователь не найден"));
+                .orElseThrow(() -> new RequestException(HttpStatus.NOT_FOUND, USER_NOT_FOUND));
     }
 
-    public User createUser(UserDto userDto) {
-        if (userRepository.findUserByEmail(userDto.getEmail()) != null) {
+    public User createUser(User user) {
+        if (userRepository.findUserByEmail(user.getEmail()) != null) {
             throw new RequestException(HttpStatus.CONFLICT, "Пользователь с таким email уже зарегистрирован");
         }
-        userDto.setId(0L);
-        User user = userDto.createUser();
+        user.setId(0L);
         return userRepository.save(user);
     }
 
     @Transactional
-    public User updateUser(Long id, UserDto userDto) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RequestException(HttpStatus.NOT_FOUND, "Пользователь не найден"));
-        userDto.setId(id);
-        userDto.updateUser(user);
-        return user;
+    public User updateUser(Long id, User user) {
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new RequestException(HttpStatus.NOT_FOUND, USER_NOT_FOUND));
+
+        if (userRepository.findUserByEmail(user.getEmail()) != null && !existingUser.getEmail().equals(user.getEmail())) {
+            throw new RequestException(HttpStatus.CONFLICT, "С таким email уже зарегистрирован другой пользователь");
+        }
+
+        existingUser.setNickname(user.getNickname());
+        existingUser.setEmail(user.getEmail());
+        existingUser.setCvLink(user.getCvLink());
+        
+        return userRepository.save(existingUser);
     }
 
     public void deleteUser(Long id) {
@@ -63,12 +70,12 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public List<Vacancy> getUserFavorites(Long id) {
         User user = getUserById(id);
-        List<Vacancy> ret = user.getFavoriteList();
-        Hibernate.initialize(ret);
-        return ret;
+        List<Vacancy> favorites = user.getFavoriteList();
+        Hibernate.initialize(favorites);
+        return favorites;
     }
 
-    public List<UserVacancyResponseDto> getUserResponses(Long id) {
+    public List<UserVacancyResponse> getUserResponses(Long id) {
         return responseService.getUserResponses(id);
     }
 }

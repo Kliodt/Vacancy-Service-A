@@ -1,14 +1,17 @@
 package com.vacancy.controllers;
 
-import com.vacancy.model.dto.OrganizationDto;
-import com.vacancy.model.dto.UserVacancyResponseDto;
-import com.vacancy.model.dto.VacancyDto;
+import com.vacancy.model.dto.in.OrganizationDtoIn;
+import com.vacancy.model.dto.in.VacancyDtoIn;
+import com.vacancy.model.dto.out.OrganizationDtoOut;
+import com.vacancy.model.dto.out.UserVacancyResponseDtoOut;
+import com.vacancy.model.dto.out.VacancyDtoOut;
 import com.vacancy.model.entities.Organization;
 import com.vacancy.model.entities.Vacancy;
 import com.vacancy.service.OrganizationService;
 import com.vacancy.service.UserVacancyResponseService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -24,43 +27,38 @@ public class OrganizationController {
 
     private final OrganizationService organizationService;
     private final UserVacancyResponseService responseService;
+    private final ModelMapper modelMapper;
 
     @GetMapping
-    public ResponseEntity<List<OrganizationDto>> getAllOrganizations(
+    public ResponseEntity<List<OrganizationDtoOut>> getAllOrganizations(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        
         Page<Organization> organizationPage = organizationService.getAllOrganizations(page, size);
-        
-        List<OrganizationDto> dtos = organizationPage.getContent().stream()
-                .map(OrganizationDto::new).toList();
-        
+        List<OrganizationDtoOut> dtos = organizationPage.getContent().stream()
+                .map(org -> modelMapper.map(org, OrganizationDtoOut.class)).toList();
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", String.valueOf(organizationPage.getTotalElements()));
-        
         return ResponseEntity.ok().headers(headers).body(dtos);
     }
 
-
-    // ------------------------------ CRUD for organizations ------------------------------
-
-
     @GetMapping("/{id}")
-    public ResponseEntity<OrganizationDto> getOrganizationById(@PathVariable Long id) {
+    public ResponseEntity<OrganizationDtoOut> getOrganizationById(@PathVariable Long id) {
         Organization organization = organizationService.getOrganizationById(id);
-        return ResponseEntity.ok(new OrganizationDto(organization));
+        return ResponseEntity.ok(modelMapper.map(organization, OrganizationDtoOut.class));
     }
 
     @PostMapping
-    public ResponseEntity<OrganizationDto> createOrganization(@Valid @RequestBody OrganizationDto organizationDto) {
-        Organization savedOrganization = organizationService.createOrganization(organizationDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new OrganizationDto(savedOrganization));
+    public ResponseEntity<OrganizationDtoOut> createOrganization(@Valid @RequestBody OrganizationDtoIn organizationDtoIn) {
+        Organization organization = modelMapper.map(organizationDtoIn, Organization.class);
+        Organization savedOrganization = organizationService.createOrganization(organization);
+        return ResponseEntity.status(HttpStatus.CREATED).body(modelMapper.map(savedOrganization, OrganizationDtoOut.class));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<OrganizationDto> updateOrganization(@PathVariable Long id, @Valid @RequestBody OrganizationDto organizationDto) {
-        Organization updatedOrganization = organizationService.updateOrganization(id, organizationDto);
-        return ResponseEntity.ok(new OrganizationDto(updatedOrganization));
+    public ResponseEntity<OrganizationDtoOut> updateOrganization(@PathVariable Long id, @Valid @RequestBody OrganizationDtoIn organizationDtoIn) {
+        Organization organization = modelMapper.map(organizationDtoIn, Organization.class);
+        Organization updatedOrganization = organizationService.updateOrganization(id, organization);
+        return ResponseEntity.ok(modelMapper.map(updatedOrganization, OrganizationDtoOut.class));
     }
 
     @DeleteMapping("/{id}")
@@ -69,32 +67,31 @@ public class OrganizationController {
         return ResponseEntity.noContent().build();
     }
 
-
-    // ------------------------------ Vacancy management ------------------------------
-
-
     @GetMapping("/{orgId}/vacancies")
-    public ResponseEntity<List<VacancyDto>> getOrganizationVacancies(@PathVariable Long orgId) {
+    public ResponseEntity<List<VacancyDtoOut>> getOrganizationVacancies(@PathVariable Long orgId) {
         List<Vacancy> vacancies = organizationService.getOrganizationVacancies(orgId);
-        List<VacancyDto> dtos = vacancies.stream().map(VacancyDto::new).toList();
+        List<VacancyDtoOut> dtos = vacancies.stream()
+                .map(vacancy -> modelMapper.map(vacancy, VacancyDtoOut.class)).toList();
         return ResponseEntity.ok(dtos);
     }
 
     @PostMapping("/{orgId}/vacancies")
-    public ResponseEntity<VacancyDto> publishVacancy(
+    public ResponseEntity<VacancyDtoOut> publishVacancy(
             @PathVariable Long orgId,
-            @Valid @RequestBody VacancyDto vacancyDto) {
-        Vacancy savedVacancy = organizationService.publishVacancy(orgId, vacancyDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new VacancyDto(savedVacancy));
+            @Valid @RequestBody VacancyDtoIn vacancyDtoIn) {
+        Vacancy vacancy = modelMapper.map(vacancyDtoIn, Vacancy.class);
+        Vacancy savedVacancy = organizationService.publishVacancy(orgId, vacancy);
+        return ResponseEntity.status(HttpStatus.CREATED).body(modelMapper.map(savedVacancy, VacancyDtoOut.class));
     }
 
     @PutMapping("/{orgId}/vacancies/{vacancyId}")
-    public ResponseEntity<VacancyDto> updateOrganizationVacancy(
+    public ResponseEntity<VacancyDtoOut> updateOrganizationVacancy(
             @PathVariable Long orgId,
             @PathVariable Long vacancyId,
-            @Valid @RequestBody VacancyDto vacancyDto) {
-        Vacancy updatedVacancy = organizationService.updateOrganizationVacancy(orgId, vacancyId, vacancyDto);
-        return ResponseEntity.ok(new VacancyDto(updatedVacancy));
+            @Valid @RequestBody VacancyDtoIn vacancyDtoIn) {
+        Vacancy vacancy = modelMapper.map(vacancyDtoIn, Vacancy.class);
+        Vacancy updatedVacancy = organizationService.updateOrganizationVacancy(orgId, vacancyId, vacancy);
+        return ResponseEntity.ok(modelMapper.map(updatedVacancy, VacancyDtoOut.class));
     }
 
     @DeleteMapping("/{orgId}/vacancies/{vacancyId}")
@@ -106,11 +103,12 @@ public class OrganizationController {
     }
 
     @GetMapping("/{orgId}/vacancies/{vacancyId}/responses")
-    public ResponseEntity<List<UserVacancyResponseDto>> getVacancyResponses(
+    public ResponseEntity<List<UserVacancyResponseDtoOut>> getVacancyResponses(
             @PathVariable Long orgId,
             @PathVariable Long vacancyId) {
         organizationService.getOrganizationById(orgId);
-        List<UserVacancyResponseDto> responses = responseService.getVacancyResponses(vacancyId);
+        List<UserVacancyResponseDtoOut> responses = responseService.getVacancyResponses(vacancyId).stream()
+                .map(response -> modelMapper.map(response, UserVacancyResponseDtoOut.class)).toList();
         return ResponseEntity.ok(responses);
     }
 }

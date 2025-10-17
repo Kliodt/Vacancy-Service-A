@@ -1,10 +1,12 @@
 package com.vacancy.service;
 
-import com.vacancy.model.dto.UserVacancyResponseDto;
+import com.vacancy.model.entities.UserVacancyResponse;
 
 import java.util.List;
 
 public interface UserVacancyResponseService {
-    List<UserVacancyResponseDto> getUserResponses(Long userId);
-    List<UserVacancyResponseDto> getVacancyResponses(Long vacancyId);
+    List<UserVacancyResponse> getUserResponses(Long userId);
+    List<UserVacancyResponse> getVacancyResponses(Long vacancyId);
+    void deleteByUserIdAndVacancyId(Long userId, Long vacancyId);
+    UserVacancyResponse addOrReplaceResponse(UserVacancyResponse response);
 }

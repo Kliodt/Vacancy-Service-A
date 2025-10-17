@@ -1,13 +1,6 @@
 package com.vacancy.service;
 
-import com.vacancy.exceptions.RequestException;
-import com.vacancy.model.dto.OrganizationDto;
-import com.vacancy.model.dto.VacancyDto;
-import com.vacancy.model.entities.Organization;
-import com.vacancy.model.entities.Vacancy;
-import com.vacancy.repository.OrganizationRepository;
-import com.vacancy.repository.VacancyRepository;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
 
 import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
@@ -17,15 +10,22 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import com.vacancy.exceptions.RequestException;
+import com.vacancy.model.entities.Organization;
+import com.vacancy.model.entities.Vacancy;
+import com.vacancy.repository.OrganizationRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class OrganizationServiceImpl implements OrganizationService {
 
+    private static final String ORGANIZATION_NOT_FOUND = "Организация не найдена";
+
     private final OrganizationRepository organizationRepository;
-    private final VacancyRepository vacancyRepository;
+    private final VacancyService vacancyService;
 
     public Page<Organization> getAllOrganizations(int page, int size) {
         if (size > 50) {
@@ -37,31 +37,31 @@ public class OrganizationServiceImpl implements OrganizationService {
 
     public Organization getOrganizationById(Long id) {
         return organizationRepository.findById(id)
-                .orElseThrow(() -> new RequestException(HttpStatus.NOT_FOUND, "Организация не найдена"));
+                .orElseThrow(() -> new RequestException(HttpStatus.NOT_FOUND, ORGANIZATION_NOT_FOUND));
     }
 
     @Transactional
-    public Organization createOrganization(OrganizationDto organizationDto) {
-        if (organizationRepository.findOrganizationByEmail(organizationDto.getEmail()) != null) {
+    public Organization createOrganization(Organization organization) {
+        if (organizationRepository.findOrganizationByEmail(organization.getEmail()) != null) {
             throw new RequestException(HttpStatus.CONFLICT, "Организация с таким email уже зарегистрирована");
         }
-        organizationDto.setId(0L);
-        Organization organization = organizationDto.createOrganization();
         return organizationRepository.save(organization);
     }
 
     @Transactional
-    public Organization updateOrganization(Long id, OrganizationDto organizationDto) {
-        Organization organization = organizationRepository.findById(id)
-                .orElseThrow(() -> new RequestException(HttpStatus.NOT_FOUND, "Организация не найдена"));
-        
-        Organization existing = organizationRepository.findOrganizationByEmail(organizationDto.getEmail());
-        if (existing != null) {
+    public Organization updateOrganization(Long id, Organization organization) {
+        Organization existingOrganization = organizationRepository.findById(id)
+                .orElseThrow(() -> new RequestException(HttpStatus.NOT_FOUND, ORGANIZATION_NOT_FOUND));
+
+        Organization existingByEmail = organizationRepository.findOrganizationByEmail(organization.getEmail());
+        if (existingByEmail != null && existingByEmail.getId() != id) {
             throw new RequestException(HttpStatus.CONFLICT, "С таким email уже зарегистрирована другая организация");
         }
-        organizationDto.setId(id);        
-        organizationDto.updateOrganization(organization);
-        return organization;
+
+        existingOrganization.setNickname(organization.getNickname());
+        existingOrganization.setEmail(organization.getEmail());
+
+        return organizationRepository.save(existingOrganization);
     }
 
     @Transactional
@@ -71,45 +71,46 @@ public class OrganizationServiceImpl implements OrganizationService {
 
     @Transactional
     public List<Vacancy> getOrganizationVacancies(Long id) {
-        List<Vacancy> ret = organizationRepository.findById(id)
-                .orElseThrow(() -> new RequestException(HttpStatus.NOT_FOUND, "Организация не найдена"))
+        List<Vacancy> vacancies = organizationRepository.findById(id)
+                .orElseThrow(() -> new RequestException(HttpStatus.NOT_FOUND, ORGANIZATION_NOT_FOUND))
                 .getPublishedVacancies();
-        Hibernate.initialize(ret);
-        return ret;
+        Hibernate.initialize(vacancies);
+        return vacancies;
     }
 
     @Transactional
-    public Vacancy publishVacancy(Long organizationId, VacancyDto vacancyDto) {
+    public Vacancy publishVacancy(Long organizationId, Vacancy vacancy) {
         Organization organization = organizationRepository.findById(organizationId)
-                .orElseThrow(() -> new RequestException(HttpStatus.NOT_FOUND, "Организация не найдена"));
-        vacancyDto.setId(0L);
-        Vacancy vacancy = vacancyDto.createVacancy();
+                .orElseThrow(() -> new RequestException(HttpStatus.NOT_FOUND, ORGANIZATION_NOT_FOUND));
         vacancy.setOrganization(organization);
-        return vacancyRepository.save(vacancy);
+        return vacancyService.saveVacancy(vacancy);
     }
 
     @Transactional
-    public Vacancy updateOrganizationVacancy(Long organizationId, Long vacancyId, VacancyDto vacancyDto) {        
-        Vacancy vacancy = vacancyRepository.findById(vacancyId)
-                .orElseThrow(() -> new RequestException(HttpStatus.NOT_FOUND, "Вакансия не найдена"));
-        
-        if (vacancy.getOrganization() == null || vacancy.getOrganization().getId() != organizationId) {
+    public Vacancy updateOrganizationVacancy(Long organizationId, Long vacancyId, Vacancy vacancy) {
+        Vacancy existingVacancy = vacancyService.getVacancyById(vacancyId);
+
+        if (existingVacancy.getOrganization() == null || existingVacancy.getOrganization().getId() != organizationId) {
             throw new RequestException(HttpStatus.FORBIDDEN, "Вакансия не принадлежит данной организации");
         }
-        vacancyDto.setId(vacancyId);
-        vacancyDto.updateVacancy(vacancy);
-        return vacancy;
+
+        existingVacancy.setDescription(vacancy.getDescription());
+        existingVacancy.setLongDescription(vacancy.getLongDescription());
+        existingVacancy.setMinSalary(vacancy.getMinSalary());
+        existingVacancy.setMaxSalary(vacancy.getMaxSalary());
+        existingVacancy.setCity(vacancy.getCity());
+        
+        return vacancyService.saveVacancy(existingVacancy);
     }
 
     @Transactional
     public void deleteOrganizationVacancy(Long organizationId, Long vacancyId) {
-        Vacancy vacancy = vacancyRepository.findById(vacancyId)
-                .orElseThrow(() -> new RequestException(HttpStatus.NOT_FOUND, "Вакансия не найдена"));
-        
+        Vacancy vacancy = vacancyService.getVacancyById(vacancyId);
+
         if (vacancy.getOrganization() == null || vacancy.getOrganization().getId() != organizationId) {
             throw new RequestException(HttpStatus.FORBIDDEN, "Вакансия не принадлежит данной организации");
         }
-        
-        vacancyRepository.delete(vacancy);
+
+        vacancyService.deleteVacancy(vacancy.getId());
     }
 }

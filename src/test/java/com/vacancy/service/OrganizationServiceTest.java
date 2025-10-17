@@ -1,13 +1,12 @@
 package com.vacancy.service;
 
-import com.vacancy.exceptions.RequestException;
-import com.vacancy.model.dto.OrganizationDto;
-import com.vacancy.model.dto.VacancyDto;
-import com.vacancy.model.entities.Organization;
-import com.vacancy.model.entities.Vacancy;
-import com.vacancy.repository.OrganizationRepository;
-import com.vacancy.repository.VacancyRepository;
-import io.restassured.RestAssured;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,9 +19,13 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 
-import java.util.List;
+import com.vacancy.exceptions.RequestException;
+import com.vacancy.model.entities.Organization;
+import com.vacancy.model.entities.Vacancy;
+import com.vacancy.repository.OrganizationRepository;
+import com.vacancy.repository.VacancyRepository;
 
-import static org.junit.jupiter.api.Assertions.*;
+import io.restassured.RestAssured;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class OrganizationServiceTest {
@@ -109,10 +112,9 @@ class OrganizationServiceTest {
 
     @Test
     void createOrganizationTest() {
-        Organization tempOrg = new Organization("NewOrg", "new@example.com");
-        OrganizationDto orgDto = new OrganizationDto(tempOrg);
+        Organization org = new Organization("NewOrg", "new@example.com");
 
-        Organization result = organizationService.createOrganization(orgDto);
+        Organization result = organizationService.createOrganization(org);
 
         assertTrue(result.getId() > 0);
         assertEquals("new@example.com", result.getEmail());
@@ -120,31 +122,28 @@ class OrganizationServiceTest {
 
     @Test
     void createOrganization_shouldThrowException_whenEmailExists() {
-        Organization tempOrg = new Organization("AnotherOrg", "test@example.com");
-        OrganizationDto orgDto = new OrganizationDto(tempOrg);
+        Organization org = new Organization("AnotherOrg", testOrganization.getEmail());
 
         assertThrows(RequestException.class, () -> {
-            organizationService.createOrganization(orgDto);
+            organizationService.createOrganization(org);
         });
     }
 
     @Test
     void updateOrganizationTest() {
-        Organization tempOrg = new Organization("UpdatedOrg", "updated@example.com");
-        OrganizationDto orgDto = new OrganizationDto(tempOrg);
+        Organization org = new Organization("UpdatedOrg", "updated@example.com");
 
-        Organization result = organizationService.updateOrganization(testOrganization.getId(), orgDto);
+        Organization result = organizationService.updateOrganization(testOrganization.getId(), org);
 
         assertEquals("updated@example.com", result.getEmail());
     }
 
     @Test
     void updateOrganization_shouldThrowException_whenNotFound() {
-        Organization tempOrg = new Organization("UpdatedOrg", "updated@example.com");
-        OrganizationDto orgDto = new OrganizationDto(tempOrg);
+        Organization org = new Organization("UpdatedOrg", "updated@example.com");
 
         assertThrows(RequestException.class, () -> {
-            organizationService.updateOrganization(999L, orgDto);
+            organizationService.updateOrganization(999L, org);
         });
     }
 
@@ -153,12 +152,11 @@ class OrganizationServiceTest {
         Organization anotherOrg = new Organization("AnotherOrg", "another@example.com");
         organizationRepository.save(anotherOrg);
 
-        Organization tempOrg = new Organization("UpdatedOrg", "another@example.com");
-        OrganizationDto orgDto = new OrganizationDto(tempOrg);
+        Organization org = new Organization("UpdatedOrg", "another@example.com");
         Long id = testOrganization.getId();
 
         assertThrows(RequestException.class, () -> {
-            organizationService.updateOrganization(id, orgDto);
+            organizationService.updateOrganization(id, org);
         });
     }
 
@@ -181,10 +179,9 @@ class OrganizationServiceTest {
 
     @Test
     void publishVacancyTest() {
-        Vacancy tempVacancy = new Vacancy("Python Developer", "Python Developer position");
-        VacancyDto vacancyDto = new VacancyDto(tempVacancy);
+        Vacancy vacancy = new Vacancy("Python Developer", "Python Developer position");
 
-        Vacancy result = organizationService.publishVacancy(testOrganization.getId(), vacancyDto);
+        Vacancy result = organizationService.publishVacancy(testOrganization.getId(), vacancy);
 
         assertTrue(result.getId() > 0);
         assertEquals("Python Developer", result.getDescription());
@@ -193,11 +190,10 @@ class OrganizationServiceTest {
 
     @Test
     void updateOrganizationVacancyTest() {
-        Vacancy tempVacancy = new Vacancy("Updated Position", "Updated description");
-        VacancyDto vacancyDto = new VacancyDto(tempVacancy);
+        Vacancy vacancy = new Vacancy("Updated Position", "Updated description");
 
         Vacancy result = organizationService.updateOrganizationVacancy(
-            testOrganization.getId(), testVacancy.getId(), vacancyDto);
+            testOrganization.getId(), testVacancy.getId(), vacancy);
 
         assertEquals("Updated Position", result.getDescription());
         assertEquals("Updated description", result.getLongDescription());
@@ -205,12 +201,11 @@ class OrganizationServiceTest {
 
     @Test
     void updateOrganizationVacancy_shouldThrowException_whenVacancyNotFound() {
-        Vacancy tempVacancy = new Vacancy("Updated Position", "Updated description");
-        VacancyDto vacancyDto = new VacancyDto(tempVacancy);
+        Vacancy vacancy = new Vacancy("Updated Position", "Updated description");
         Long id = testOrganization.getId();
 
         assertThrows(RequestException.class, () -> {
-            organizationService.updateOrganizationVacancy(id, 999L, vacancyDto);
+            organizationService.updateOrganizationVacancy(id, 999L, vacancy);
         });
     }
 
@@ -219,13 +214,12 @@ class OrganizationServiceTest {
         Organization anotherOrg = new Organization("AnotherOrg", "another@example.com");
         Organization savedAnotherOrg = organizationRepository.save(anotherOrg);
 
-        Vacancy tempVacancy = new Vacancy("Updated Position", "Updated description");
-        VacancyDto vacancyDto = new VacancyDto(tempVacancy);
+        Vacancy vacancy = new Vacancy("Updated Position", "Updated description");
         Long orgId = savedAnotherOrg.getId();
         Long vacancyId = savedAnotherOrg.getId();
 
         assertThrows(RequestException.class, () -> {
-            organizationService.updateOrganizationVacancy(orgId, vacancyId, vacancyDto);
+            organizationService.updateOrganizationVacancy(orgId, vacancyId, vacancy);
         });
     }
 

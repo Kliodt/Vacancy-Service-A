@@ -1,6 +1,5 @@
 package com.vacancy.service;
 
-import com.vacancy.model.dto.UserVacancyResponseDto;
 import com.vacancy.model.entities.Organization;
 import com.vacancy.model.entities.User;
 import com.vacancy.model.entities.UserVacancyResponse;
@@ -102,17 +101,17 @@ class UserVacancyResponseServiceTest {
         responseRepository.save(response1);
         responseRepository.save(response2);
 
-        List<UserVacancyResponseDto> result = responseService.getUserResponses(testUser1.getId());
+        List<UserVacancyResponse> result = responseService.getUserResponses(testUser1.getId());
 
         assertEquals(2, result.size());
-        assertTrue(result.stream().anyMatch(r -> r.getVacancyId() == testVacancy1.getId()));
-        assertTrue(result.stream().anyMatch(r -> r.getVacancyId() == testVacancy2.getId()));
-        assertTrue(result.stream().allMatch(r -> r.getUserId() == testUser1.getId()));
+        assertTrue(result.stream().anyMatch(r -> r.getVacancy().getId() == testVacancy1.getId()));
+        assertTrue(result.stream().anyMatch(r -> r.getVacancy().getId() == testVacancy2.getId()));
+        assertTrue(result.stream().allMatch(r -> r.getUser().getId() == testUser1.getId()));
     }
 
     @Test
     void getUserResponses_shouldReturnEmpty_whenNoResponses() {
-        List<UserVacancyResponseDto> result = responseService.getUserResponses(testUser1.getId());
+        List<UserVacancyResponse> result = responseService.getUserResponses(testUser1.getId());
         
         assertTrue(result.isEmpty());
     }
@@ -124,11 +123,11 @@ class UserVacancyResponseServiceTest {
         responseRepository.save(response1);
         responseRepository.save(response2);
 
-        List<UserVacancyResponseDto> result = responseService.getUserResponses(testUser1.getId());
+        List<UserVacancyResponse> result = responseService.getUserResponses(testUser1.getId());
 
         assertEquals(1, result.size());
-        assertEquals(testUser1.getId(), result.get(0).getUserId());
-        assertEquals(testVacancy1.getId(), result.get(0).getVacancyId());
+        assertEquals(testUser1.getId(), result.get(0).getUser().getId());
+        assertEquals(testVacancy1.getId(), result.get(0).getVacancy().getId());
     }
 
     @Test
@@ -138,17 +137,17 @@ class UserVacancyResponseServiceTest {
         responseRepository.save(response1);
         responseRepository.save(response2);
 
-        List<UserVacancyResponseDto> result = responseService.getVacancyResponses(testVacancy1.getId());
+        List<UserVacancyResponse> result = responseService.getVacancyResponses(testVacancy1.getId());
 
         assertEquals(2, result.size());
-        assertTrue(result.stream().anyMatch(r -> r.getUserId() == testUser1.getId()));
-        assertTrue(result.stream().anyMatch(r -> r.getUserId() == testUser2.getId()));
-        assertTrue(result.stream().allMatch(r -> r.getVacancyId() == testVacancy1.getId()));
+        assertTrue(result.stream().anyMatch(r -> r.getUser().getId() == testUser1.getId()));
+        assertTrue(result.stream().anyMatch(r -> r.getUser().getId() == testUser2.getId()));
+        assertTrue(result.stream().allMatch(r -> r.getVacancy().getId() == testVacancy1.getId()));
     }
 
     @Test
     void getVacancyResponses_shouldReturnEmpty_whenNoResponses() {
-        List<UserVacancyResponseDto> result = responseService.getVacancyResponses(testVacancy1.getId());
+        List<UserVacancyResponse> result = responseService.getVacancyResponses(testVacancy1.getId());
         
         assertTrue(result.isEmpty());
     }
@@ -160,11 +159,11 @@ class UserVacancyResponseServiceTest {
         responseRepository.save(response1);
         responseRepository.save(response2);
 
-        List<UserVacancyResponseDto> result = responseService.getVacancyResponses(testVacancy1.getId());
+        List<UserVacancyResponse> result = responseService.getVacancyResponses(testVacancy1.getId());
 
         assertEquals(1, result.size());
-        assertEquals(testUser1.getId(), result.get(0).getUserId());
-        assertEquals(testVacancy1.getId(), result.get(0).getVacancyId());
+        assertEquals(testUser1.getId(), result.get(0).getUser().getId());
+        assertEquals(testVacancy1.getId(), result.get(0).getVacancy().getId());
     }
 
     @Test
@@ -172,7 +171,7 @@ class UserVacancyResponseServiceTest {
         UserVacancyResponse response = new UserVacancyResponse(testUser1, testVacancy1);
         responseRepository.save(response);
 
-        List<UserVacancyResponseDto> result = responseService.getUserResponses(testUser1.getId());
+        List<UserVacancyResponse> result = responseService.getUserResponses(testUser1.getId());
 
         assertEquals(1, result.size());
         assertNotNull(result.get(0).getResponseDate());

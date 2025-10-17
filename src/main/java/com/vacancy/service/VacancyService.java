@@ -10,4 +10,6 @@ public interface VacancyService {
     void removeResponseFromVacancy(Long vacancyId, Long userId);
     void addToFavorites(Long vacancyId, Long userId);
     void removeFromFavorites(Long vacancyId, Long userId);
+    Vacancy saveVacancy(Vacancy vacancy);
+    void deleteVacancy(Long id);
 }

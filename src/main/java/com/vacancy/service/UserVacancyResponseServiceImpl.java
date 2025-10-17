@@ -1,12 +1,14 @@
 package com.vacancy.service;
 
-import com.vacancy.model.dto.UserVacancyResponseDto;
-import com.vacancy.repository.UserVacancyResponseRepository;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import com.vacancy.model.entities.UserVacancyResponse;
+import com.vacancy.repository.UserVacancyResponseRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -15,18 +17,29 @@ public class UserVacancyResponseServiceImpl implements UserVacancyResponseServic
     private final UserVacancyResponseRepository responseRepository;
 
     @Transactional(readOnly = true)
-    public List<UserVacancyResponseDto> getUserResponses(Long userId) {
-        return responseRepository.findByUserId(userId)
-                .stream()
-                .map(UserVacancyResponseDto::new)
-                .toList();
+    public List<UserVacancyResponse> getUserResponses(Long userId) {
+        return responseRepository.findByUserId(userId);
     }
 
     @Transactional(readOnly = true)
-    public List<UserVacancyResponseDto> getVacancyResponses(Long vacancyId) {
-        return responseRepository.findByVacancyId(vacancyId)
-                .stream()
-                .map(UserVacancyResponseDto::new)
-                .toList();
+    public List<UserVacancyResponse> getVacancyResponses(Long vacancyId) {
+        return responseRepository.findByVacancyId(vacancyId);
     }
+
+    
+    public void deleteByUserIdAndVacancyId(Long userId, Long vacancyId) {
+        responseRepository.deleteByUserIdAndVacancyId(userId, vacancyId);
+    }
+
+    @Transactional
+    public UserVacancyResponse addOrReplaceResponse(UserVacancyResponse response) {
+        Long vacancyId = response.getVacancy().getId();
+        Long userId = response.getUser().getId();
+        UserVacancyResponse existing = responseRepository.findByUserIdAndVacancyId(userId, vacancyId).orElse(null);
+        if (existing != null) {
+            responseRepository.delete(existing);
+        }
+        return responseRepository.save(response);
+    }
+
 }

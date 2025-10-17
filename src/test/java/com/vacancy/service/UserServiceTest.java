@@ -1,17 +1,12 @@
 package com.vacancy.service;
 
-import com.vacancy.exceptions.RequestException;
-import com.vacancy.model.dto.UserDto;
-import com.vacancy.model.dto.UserVacancyResponseDto;
-import com.vacancy.model.entities.Organization;
-import com.vacancy.model.entities.User;
-import com.vacancy.model.entities.UserVacancyResponse;
-import com.vacancy.model.entities.Vacancy;
-import com.vacancy.repository.OrganizationRepository;
-import com.vacancy.repository.UserRepository;
-import com.vacancy.repository.UserVacancyResponseRepository;
-import com.vacancy.repository.VacancyRepository;
-import io.restassured.RestAssured;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,9 +19,17 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 
-import java.util.List;
+import com.vacancy.exceptions.RequestException;
+import com.vacancy.model.entities.Organization;
+import com.vacancy.model.entities.User;
+import com.vacancy.model.entities.UserVacancyResponse;
+import com.vacancy.model.entities.Vacancy;
+import com.vacancy.repository.OrganizationRepository;
+import com.vacancy.repository.UserRepository;
+import com.vacancy.repository.UserVacancyResponseRepository;
+import com.vacancy.repository.VacancyRepository;
 
-import static org.junit.jupiter.api.Assertions.*;
+import io.restassured.RestAssured;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class UserServiceTest {
@@ -125,11 +128,10 @@ class UserServiceTest {
 
     @Test
     void createUserTest() {
-        User tempUser = new User("newUser", "new@example.com");
-        tempUser.setCvLink("http://newcv.example.com");
-        UserDto userDto = new UserDto(tempUser);
+        User user = new User("newUser", "new@example.com");
+        user.setCvLink("http://newcv.example.com");
 
-        User result = userService.createUser(userDto);
+        User result = userService.createUser(user);
 
         assertTrue(result.getId() > 0);
         assertEquals("newUser", result.getNickname());
@@ -138,21 +140,19 @@ class UserServiceTest {
 
     @Test
     void createUser_shouldThrowException_whenEmailExists() {
-        User tempUser = new User("anotherUser", "test@example.com");
-        UserDto userDto = new UserDto(tempUser);
+        User user = new User("anotherUser", "test@example.com");
 
         assertThrows(RequestException.class, () -> {
-            userService.createUser(userDto);
+            userService.createUser(user);
         });
     }
 
     @Test
     void updateUserTest() {
-        User tempUser = new User("updatedUser", "updated@example.com");
-        tempUser.setCvLink("http://updated.example.com");
-        UserDto userDto = new UserDto(tempUser);
+        User user = new User("updatedUser", "updated@example.com");
+        user.setCvLink("http://updated.example.com");
 
-        User result = userService.updateUser(testUser.getId(), userDto);
+        User result = userService.updateUser(testUser.getId(), user);
 
         assertEquals("updatedUser", result.getNickname());
         assertEquals("updated@example.com", result.getEmail());
@@ -161,11 +161,10 @@ class UserServiceTest {
 
     @Test
     void updateUser_shouldThrowException_whenNotFound() {
-        User tempUser = new User("updatedUser", "updated@example.com");
-        UserDto userDto = new UserDto(tempUser);
+        User user = new User("updatedUser", "updated@example.com");
 
         assertThrows(RequestException.class, () -> {
-            userService.updateUser(999L, userDto);
+            userService.updateUser(999L, user);
         });
     }
 
@@ -201,16 +200,16 @@ class UserServiceTest {
         UserVacancyResponse response = new UserVacancyResponse(testUser, testVacancy);
         responseRepository.save(response);
 
-        List<UserVacancyResponseDto> result = userService.getUserResponses(testUser.getId());
+        List<UserVacancyResponse> result = userService.getUserResponses(testUser.getId());
 
         assertEquals(1, result.size());
-        assertEquals(testUser.getId(), result.get(0).getUserId());
-        assertEquals(testVacancy.getId(), result.get(0).getVacancyId());
+        assertEquals(testUser.getId(), result.get(0).getUser().getId());
+        assertEquals(testVacancy.getId(), result.get(0).getVacancy().getId());
     }
 
     @Test
     void getUserResponses_shouldReturnEmpty_whenNoResponses() {
-        List<UserVacancyResponseDto> result = userService.getUserResponses(testUser.getId());
+        List<UserVacancyResponse> result = userService.getUserResponses(testUser.getId());
         
         assertTrue(result.isEmpty());
     }
