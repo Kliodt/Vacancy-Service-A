@@ -1,22 +1,21 @@
-package com.vacancy.model.dto;
+package com.vacancy.model.dto.in;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
-import com.vacancy.model.entities.Vacancy;
-import jakarta.validation.constraints.*;
+
+import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 
-// todo: мапперы для дто
-
 @Data
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class VacancyDto {
-
-    private Long id;
+public class VacancyDtoIn {
 
     @NotBlank(message = "Описание вакансии не может быть пустым")
     @Size(max = 255, message = "Описание не может превышать 255 символов")
@@ -34,35 +33,7 @@ public class VacancyDto {
     @Size(max = 100, message = "Название города не может превышать 100 символов")
     private String city;
 
-    private Long organizationId;
-
-    public VacancyDto(Vacancy vacancy) {
-        this.id = vacancy.getId();
-        this.description = vacancy.getDescription();
-        this.longDescription = vacancy.getLongDescription();
-        this.minSalary = vacancy.getMinSalary();
-        this.maxSalary = vacancy.getMaxSalary();
-        this.city = vacancy.getCity();
-        
-        if (vacancy.getOrganization() != null) {
-            this.organizationId = vacancy.getOrganization().getId();
-        }
-    }
-
-    public Vacancy createVacancy() {
-        Vacancy v = new Vacancy(description, longDescription);
-        updateVacancy(v);
-        return v;
-    }
-
-    public void updateVacancy(Vacancy vacancy) {
-        vacancy.setId(this.id);
-        vacancy.setDescription(this.description);
-        vacancy.setLongDescription(this.longDescription);
-        vacancy.setMinSalary(this.minSalary);
-        vacancy.setMaxSalary(this.maxSalary);
-        vacancy.setCity(this.city);
-    }
+    private long organizationId;
 
     @AssertTrue(message = "Минимальная зарплата не может быть больше максимальной")
     boolean isSalaryRangeValid() {

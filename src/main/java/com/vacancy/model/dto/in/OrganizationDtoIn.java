@@ -1,9 +1,8 @@
-package com.vacancy.model.dto;
+package com.vacancy.model.dto.in;
 
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
-import com.vacancy.model.entities.Organization;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -16,9 +15,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class OrganizationDto {
-
-    private Long id;
+public class OrganizationDtoIn {
 
     @NotBlank(message = "Nickname не может быть пустым")
     @Size(max = 50, message = "Nickname не может превышать 50 символов")
@@ -28,23 +25,5 @@ public class OrganizationDto {
     @Email(message = "Email должен иметь правильный формат")
     @Size(max = 100, message = "Email не может превышать 100 символов")
     private String email;
-
-
-    public OrganizationDto(Organization org) {
-        this.id = org.getId();
-        this.nickname = org.getNickname();
-        this.email = org.getEmail();
-    }
-
-    public Organization createOrganization() {
-        Organization org = new Organization(nickname, email);
-        updateOrganization(org);
-        return org;
-    }
-
-    public void updateOrganization(Organization user) {
-        user.setId(this.id);
-        user.setNickname(this.nickname);
-        user.setEmail(this.email);
-    }
+    
 }
