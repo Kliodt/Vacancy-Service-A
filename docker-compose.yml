@@ -30,7 +30,7 @@ services:
     ports:
       - "8080:8080"
 
-    restart: no # todo: change it
+    restart: always
 
     env_file:
       - .env

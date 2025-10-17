@@ -15,11 +15,6 @@ public class VacancyApplication {
         SpringApplication.run(VacancyApplication.class, args);
     }
 
-    // todo: @JsonNaming аннотации - выбрать snake case (можно в application.yml)
-    // todo: Исправить костыли с id
-    // todo: Сделать чтобы сервис не зависел от нескольких репозиториев
-    // todo: Возможно разделить dto на in, out - частая практика
-
     @Bean
     public OpenAPI apiInfo() {
         return new OpenAPI().info(new Info().title("Vacancy app API").version("1.0.0"));
